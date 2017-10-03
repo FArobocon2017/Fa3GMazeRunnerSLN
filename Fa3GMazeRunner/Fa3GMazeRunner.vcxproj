@@ -153,6 +153,7 @@
     <ClInclude Include="include\Motor.h" />
     <ClInclude Include="include\ThreadPool.h" />
     <ClInclude Include="include\WallDetector.h" />
+    <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp" />
@@ -160,6 +161,9 @@
     <ClCompile Include="src\MazeSolver.cpp" />
     <ClCompile Include="src\MicroMouseDriver.cpp" />
     <ClCompile Include="src\Motor.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Fa3GMazeRunner.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
