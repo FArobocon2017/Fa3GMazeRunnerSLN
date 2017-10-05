@@ -10,6 +10,7 @@ public:
 		Left = 0,
 		Forward,
 		Right,
+		Max = 3,
 	};
 
 	// センサの参照方法
@@ -18,7 +19,8 @@ public:
 		Left = 0,
 		Forward1,
 		Forward2,
-		Right
+		Right,
+		Max = 4,
 	};
 
 	// 壁検知結果を返す構造体
@@ -28,6 +30,7 @@ public:
         int data[3]; 
         Wall():data(){}
     };
+	Wall wall;
 
 	////// 以下、関数 //////
 	// コンストラクタ
@@ -64,18 +67,26 @@ private:
 	int historyLatestLocation;
 
 	// 過去の検知結果の履歴(保持数は検知間隔によって要検討)
-	struct LumiHistory
+	struct LumiData
 	{
-		int lumidata[historyMax][4];
-		LumiHistory() :lumidata() {}
+		int lumidata[4];
+		LumiData() :lumidata() {}
 	};
-	//	int chkWallHistory[historyMax];
+	LumiData lumihistory[historyMax];
+
+	// 距離データ
+	double distdata[3];
+
 
 	// 逆2乗の法則で、光量のルートを取る前にを割る値
-	double calcDistanceCoefficient[4];
+	double coeffDistanceDivision[4] = {200, 200, 200, 200};
+
+	// 逆2乗の法則で、光量を割る前に引く値
+	double coeffDistanceSubtraction[4] = { 200, 200, 200, 200 };
 
 	// センサ実行を続けるためのフラグ
 	bool continueSenseFlag;
+
 
 	////// 以下、関数 //////
 	// 壁情報の更新
@@ -85,8 +96,13 @@ private:
 	void calcDistances();
 
 	// 距離計算
-	void calcOneDistance(int lumi);
+	double calcOneDistance(SensorAccessenum direction, int lumi);
 
 	// 光センサのキャリブレーション→距離計算の係数を求める
-	int calcCoefficient();
+	int getCoefficient();
+
+	// センサの取得値を返す
+	void getlumidata(int lumidata[4]);
+
+
 };
