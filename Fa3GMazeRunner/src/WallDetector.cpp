@@ -12,13 +12,6 @@ WallDetector::WallDetector()
 	// 壁検知のキャリブレーション
 }
 
-
-//// 暫定
-//std::this_thread::sleep_for(std::chrono::seconds(time));
-
-//return MotorOutputParam();
-
-
 // 延々とセンサ計測と壁情報の更新を行うメソッド
 void WallDetector::startLightSensor()
 {
@@ -33,8 +26,8 @@ void WallDetector::startLightSensor()
 		// 壁情報の更新
 		this->updateWallInfo();
 
-		// スリープ(time型はこれから勉強）
-		//std::this_thread::sleep_for(std::chrono::seconds((time)(this->chkInterval)));
+		// スリープ
+		std::this_thread::sleep_for(std::chrono::microseconds(this->chkInterval));
 	}
 }
 
@@ -47,7 +40,16 @@ WallDetector::Wall WallDetector::chkWall()
 // 光センサの計測を中止する関数（中身はフラグの変更のみ）
 int WallDetector::stopLightSensor()
 {
-	this->continueSenseFlag = false;
+	try
+	{
+		this->continueSenseFlag = false;
+	}
+	catch (const std::exception&)
+	{
+		return -1;
+	}
+
+	return 0;
 }
 
 // 距離を求める
@@ -55,15 +57,14 @@ void WallDetector::calcDistances()
 {
 	// 変数の初期化
 	int lumidata[4] = { 0 }; // 輝度値[4]
-	//double distdata[3] = { 0 }; // 距離[3]
-
+	
 	// 各方向の距離を求める
 	this->distdata[WallDirectionenum::Left] = this->calcOneDistance(SensorAccessenum::Left, lumidata[SensorAccessenum::Left]);
 	this->distdata[WallDirectionenum::Right] = this->calcOneDistance(SensorAccessenum::Right, lumidata[SensorAccessenum::Right]);
 	this->distdata[WallDirectionenum::Forward] = this->calcOneDistance(SensorAccessenum::Forward1, lumidata[SensorAccessenum::Forward1]);
 	this->distdata[WallDirectionenum::Forward] += this->calcOneDistance(SensorAccessenum::Forward2, lumidata[SensorAccessenum::Forward2]);
 
-	// 前方は2回あるので、平均を使う
+	// 前方は2回あるので、平均を求める
 	this->distdata[WallDirectionenum::Forward] /= 2;
 }
 
@@ -105,7 +106,6 @@ double WallDetector::calcOneDistance(SensorAccessenum direction, int lumi)
 // 壁情報の更新
 void WallDetector::updateWallInfo()
 {
-
 	for (int i = 0; i < WallDirectionenum::Max; i++)
 	{
 		if (this->distdata[i] < this->wallDetectThreshold)
@@ -116,6 +116,5 @@ void WallDetector::updateWallInfo()
 		{
 			this->wall.data[i] = 0;
 		}
-
 	}
 }

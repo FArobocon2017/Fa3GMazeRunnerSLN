@@ -13,16 +13,7 @@ public:
 		Max = 3,
 	};
 
-	// センサの参照方法
-	enum SensorAccessenum
-	{
-		Left = 0,
-		Forward1,
-		Forward2,
-		Right,
-		Max = 4,
-	};
-
+	////// 以下、属性 //////
 	// 壁検知結果を返す構造体
 	// 0：未検知、1:検知
     struct Wall
@@ -47,9 +38,21 @@ public:
 	// 光センサの計測を中止する関数（中身はフラグの変更）
 	int stopLightSensor();
 
-
+	// センサのキャリブレーション
+	int calcCoefficient();
 
 private:
+
+	// センサの参照方法
+	enum SensorAccessenum
+	{
+		Left = 0,
+		Forward1,
+		Forward2,
+		Right,
+		Max = 4,
+	};
+
 	////// 以下、属性 //////
 	// センサ実行の時間間隔(INIファイルに移行する？)
 	int chkInterval = 100;
@@ -77,7 +80,6 @@ private:
 	// 距離データ
 	double distdata[3];
 
-
 	// 逆2乗の法則で、光量のルートを取る前にを割る値
 	double coeffDistanceDivision[4] = {200, 200, 200, 200};
 
@@ -104,5 +106,7 @@ private:
 	// センサの取得値を返す
 	void getlumidata(int lumidata[4]);
 
+	// 壁センサクラスの初期化
+	void initWallDetector();
 
 };
