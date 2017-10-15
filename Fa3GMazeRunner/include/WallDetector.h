@@ -5,12 +5,14 @@ class WallDetector
 public:
 
 	// 方向ごとの壁情報の参照方法
-	enum WallDirectionenum
+	struct WallDetection{
+	enum Direction
 	{
 		Left = 0,
 		Forward,
 		Right,
 		Max = 3,
+	};
 	};
 
 	////// 以下、属性 //////
@@ -25,12 +27,12 @@ public:
 
 	////// 以下、関数 //////
 	// コンストラクタ
-	WallDetector() {};
+	WallDetector(){};
 	// デストラクタ
-	~WallDetector() {};
+	~WallDetector(){};
 	
 	// 壁情報を返す
-	Wall chkWall();// const { return Wall(); }
+	Wall chkWall();
 
 	// 光センサの計測を延々と続ける関数
 	void startLightSensor();
@@ -39,12 +41,13 @@ public:
 	int stopLightSensor();
 
 	// センサのキャリブレーション
-	int calcCoefficient();
+	int setCoefficient();
 
 private:
 
 	// センサの参照方法
-	enum SensorAccessenum
+	struct LightSensor{
+	enum Sensor
 	{
 		Left = 0,
 		Forward1,
@@ -52,22 +55,23 @@ private:
 		Right,
 		Max = 4,
 	};
+	};
 
 	////// 以下、属性 //////
-	// センサ実行の時間間隔(INIファイルに移行する？)
+	// センサ実行の時間間隔(ms)(INIファイルに移行する？)
 	int chkInterval = 100;
 
 	// 検知判定の距離(cm)(INIファイルに移行する？)
-	const double wallDetectThreshold = 4.0;
+	const double wallDetectThreshold = 5.0;
 
 	// 履歴の最大保持数(INIファイルに移行する？)
-	static const int historyMax = 10;
+	static const int historyMax = 3;
 
-	// 履歴の保持数(MAX=historyMax)
+	// 動作中の履歴の保持数(0～historyMax)
 	int historyHolderNum = 0;
 
-	// 最新の結果が入っている番地
-	int historyLatestLocation;
+	// 次に光センサの取得地を格納する番地
+	int historyNextLocation = 0;
 
 	// 過去の検知結果の履歴(保持数は検知間隔によって要検討)
 	struct LumiData
@@ -75,6 +79,8 @@ private:
 		int lumidata[4];
 		LumiData() :lumidata() {}
 	};
+
+	// 光センサの取得値の履歴
 	LumiData lumihistory[historyMax];
 
 	// 距離データ
@@ -87,7 +93,10 @@ private:
 	double coeffDistanceSubtraction[4] = { 200, 200, 200, 200 };
 
 	// センサ実行を続けるためのフラグ
-	bool continueSenseFlag;
+	bool isContinueSense = false;
+
+	// デバッグモードかどうか
+	bool isDebug = false;
 
 
 	////// 以下、関数 //////
@@ -98,15 +107,26 @@ private:
 	void calcDistances();
 
 	// 距離計算
-	double calcOneDistance(SensorAccessenum direction, int lumi);
+	double calcOneDistance(LightSensor::Sensor direction, int lumi);
 
-	// 光センサのキャリブレーション→距離計算の係数を求める
-	int getCoefficient();
+	// 距離計算の係数を求める
+	void calcCoefficient();
 
-	// センサの取得値を返す
-	void getlumidata(int lumidata[4]);
+	// センサの取得値を返す(1回計測を返す)
+	void getlumidataOnce(int lumidata[LightSensor::Max]);
+
+	// センサの取得値を返す(historyMax回計測を返す)
+	void getlumidataHist(int lumidata[LightSensor::Max]);
 
 	// 壁センサクラスの初期化
 	void initWallDetector();
 
+	// センサからの距離をファイル出力(dist_history.txt)
+	void writeDistancefromEachSensor();
+
+	// 光センサの取得値をファイル出力(light_history.txt)
+	void writeLightfromEachSensor();
+
+	// 光センサ値の取得
+	void get_sensor_sts(int* lumidata);
 };

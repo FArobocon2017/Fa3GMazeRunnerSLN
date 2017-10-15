@@ -161,6 +161,7 @@
     <ClCompile Include="src\MazeSolver.cpp" />
     <ClCompile Include="src\MicroMouseDriver.cpp" />
     <ClCompile Include="src\Motor.cpp" />
+    <ClCompile Include="src\WallDetector.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Fa3GMazeRunner.rc" />
