@@ -5,14 +5,15 @@ class WallDetector
 public:
 
 	// 方向ごとの壁情報の参照方法
-	struct WallDetection{
-	enum Direction
+	struct WallDetection
 	{
-		Left = 0,
-		Forward,
-		Right,
-		Max = 3,
-	};
+		enum Direction
+		{
+			Left = 0,
+			Forward,
+			Right,
+			Max = 3,
+		};
 	};
 
 	////// 以下、属性 //////
@@ -46,23 +47,27 @@ public:
 private:
 
 	// センサの参照方法
-	struct LightSensor{
-	enum Sensor
+	struct LightSensor
 	{
-		Left = 0,
-		Forward1,
-		Forward2,
-		Right,
-		Max = 4,
-	};
+		enum Sensor
+		{
+			Left = 0,
+			Forward1,
+			Forward2,
+			Right,
+			Max = 4,
+		};
 	};
 
 	////// 以下、属性 //////
 	// センサ実行の時間間隔(ms)(INIファイルに移行する？)
 	int chkInterval = 100;
 
-	// 検知判定の距離(cm)(INIファイルに移行する？)
-	const double wallDetectThreshold = 5.0;
+	// 壁接近判定の距離(cm)(INIファイルに移行する？)
+	const double wallDetectThreshold = 4.0;
+
+	// キャリブレーション用の遠い方の値(cm)
+	const double wallUndetectDistance = 8.0;
 
 	// 履歴の最大保持数(INIファイルに移行する？)
 	static const int historyMax = 3;
@@ -110,7 +115,7 @@ private:
 	double calcOneDistance(LightSensor::Sensor direction, int lumi);
 
 	// 距離計算の係数を求める
-	void calcCoefficient();
+	void calcCoefficient(int distantLight[LightSensor::Max], int closeantLight[LightSensor::Max]);
 
 	// センサの取得値を返す(1回計測を返す)
 	void getlumidataOnce(int lumidata[LightSensor::Max]);

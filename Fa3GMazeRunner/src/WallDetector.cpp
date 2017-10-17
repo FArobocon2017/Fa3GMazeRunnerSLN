@@ -1,6 +1,6 @@
+#include <cmath>
 #include <iostream>
 #include <fstream>
-#include <cmath>
 #include <string>
 #include <thread>
 #include <unistd.h>
@@ -214,7 +214,7 @@ void WallDetector::writeDistancefromEachSensor()
 // 光センサの取得値をファイル出力(light_history.txt)
 void WallDetector::writeLightfromEachSensor()
 {
-	ofstream ofs("dist_history.txt", ios::app);
+	ofstream ofs("light_history.txt", ios::app);
 	ofs << this->distdata[LightSensor::Sensor::Left] << " ";
 	ofs << this->distdata[LightSensor::Sensor::Forward1] << " ";
 	ofs << this->distdata[LightSensor::Sensor::Forward2] << " ";
@@ -227,6 +227,14 @@ void WallDetector::writeLightfromEachSensor()
 // 光センサのキャリブレーション→距離計算の係数を求める
 int WallDetector::setCoefficient()
 {
+	// 係数計算の入力になる配列
+	int aveDistantLight[LightSensor::Max] = { 0 };
+	int aveCloseantLight[LightSensor::Max] = { 0 };
+
+	// センサ値の受け取り用の配列
+	int tempDistantLight[LightSensor::Max] = { 0 };
+	int tempCloseantLight[LightSensor::Max] = { 0 };
+
 	// ブザー鳴らす（1秒）
 	// 3秒スリープ
 	// forループ5回でセンサ平均値取得（壁と判定する距離）
@@ -239,7 +247,7 @@ int WallDetector::setCoefficient()
 	// 1秒スリープ
 
 	// 係数計算
-	this->calcCoefficient();
+	this->calcCoefficient(aveDistantLight, aveCloseantLight);
 
 	// iniファイルへ書き出し
 
@@ -249,7 +257,16 @@ int WallDetector::setCoefficient()
 }
 
 // 距離計算の係数を求める
-void WallDetector::calcCoefficient()
+void WallDetector::calcCoefficient(int distantLight[LightSensor::Max], int closeantLight[LightSensor::Max])
 {
+	// 係数を求めるための前準備
+	double diffDist = pow(this->wallDetectThreshold,2) - pow(this->updateWallInfo, 2);
+	double distSquare = pow(this->wallDetectThreshold, 2);
 
+	// 係数の計算と代入
+	for (int i = 0; i < LightSensor::Max; i++)
+	{
+		this->coeffDistanceDivision[i] = (closeantLight[i] - distantLight[i]) / diffDist;
+		this->coeffDistanceSubtraction[i] = closeantLight[i] - (this->coeffDistanceDivision[i] / distSquare);
+	}
 }
