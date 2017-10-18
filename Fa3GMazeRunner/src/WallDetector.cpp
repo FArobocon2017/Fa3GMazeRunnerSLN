@@ -6,7 +6,9 @@
 #include <unistd.h>
 
 //#include "WallDetector.h"
+//#include "Buzzer.h"
 #include "..\include\WallDetector.h"
+#include "..\include\Buzzer.h"
 
 using namespace std;
 
@@ -83,7 +85,7 @@ void WallDetector::startLightSensor()
 		// 壁情報の更新
 		this->updateWallInfo();
 
-		// スリープ
+		// スリープ(1秒)
 		usleep(100000);
 		
 	}
@@ -232,19 +234,47 @@ int WallDetector::setCoefficient()
 	int aveCloseantLight[LightSensor::Max] = { 0 };
 
 	// センサ値の受け取り用の配列
-	int tempDistantLight[LightSensor::Max] = { 0 };
-	int tempCloseantLight[LightSensor::Max] = { 0 };
+	int tempLight[LightSensor::Max] = { 0 };
+	
+	// センサを繰り返す回数
+	int maxSensorCount = 5;
 
-	// ブザー鳴らす（1秒）
-	// 3秒スリープ
+	// ブザークラス
+	Buzzer buzzer;
+
+	// スリープ時間
+	int sleeptime = 50000;
+
+
+	// 開始のブザー鳴らす（5秒）
+	buzzer.putBuzzerPattern(2);
+	usleep(sleeptime);
+	buzzer.putBuzzerPattern(1);
+
 	// forループ5回でセンサ平均値取得（壁と判定する距離）
-	// 1秒スリープ
+	for (int i = 0; i < maxSensorCount; i++)
+	{
+		get_sensor_sts(tempLight);
+		for (int j = 0; j < LightSensor::Max; j++)
+		{
+			aveCloseantLight[j] += tempLight[j] / maxSensorCount;
+		}
+	}
 
+	// ブザー鳴らす（5秒）
+	buzzer.putBuzzerPattern(2);
+	usleep(sleeptime);
+	buzzer.putBuzzerPattern(1);
 
-	// ブザー鳴らす（1秒）
-	// 3秒スリープ
 	// forループ5回でセンサ平均値取得（壁と判定しない距離（2cm以上離す?）
-	// 1秒スリープ
+	for (int i = 0; i < maxSensorCount; i++)
+	{
+		get_sensor_sts(tempLight);
+		for (int j = 0; j < LightSensor::Max; j++)
+		{
+			aveDistantLight[j] += tempLight[j] / maxSensorCount;
+		}
+	}
 
 	// 係数計算
 	this->calcCoefficient(aveDistantLight, aveCloseantLight);
@@ -252,6 +282,9 @@ int WallDetector::setCoefficient()
 	// iniファイルへ書き出し
 
 	// ブザー鳴らす（1秒。終了の意味）
+	buzzer.putBuzzerPattern(2);
+	usleep(sleeptime / 10);
+	buzzer.putBuzzerPattern(1);
 
 
 }
