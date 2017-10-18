@@ -145,6 +145,7 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="include\Buzzer.h" />
     <ClInclude Include="include\Localizer.h" />
     <ClInclude Include="include\MazeData.h" />
     <ClInclude Include="include\MazeRunner.h" />
@@ -156,6 +157,7 @@
     <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\Buzzer.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\MazeRunner.cpp" />
     <ClCompile Include="src\MazeSolver.cpp" />
