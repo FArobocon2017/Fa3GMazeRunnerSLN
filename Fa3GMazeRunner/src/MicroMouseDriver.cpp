@@ -1,129 +1,166 @@
-#include <thread>
-#include "..\include\WallDetector.h"
-#include "..\include\MicroMouseDriver.h"
-#include "..\include\Motor.h"
+#include <iostream>
+#include <unistd.h>
+#include "../include/MicroMouseDriver.h"
 
+using namespace std;
 
-MicroMouseDriver::MicroMouseDriver()
-    : m_pWallDetector(new WallDetector())
-    , m_pMotor(new Motor())
-{}
-
-MicroMouseDriver::~MicroMouseDriver()
-{}
-
-MotorOutputParam MicroMouseDriver::drive(const MotorInputParam& motorParam)
+//ロボットを直進させるときのスリープ時間を計算
+//double stepNum = ステップ数
+//return スリープさせる時間(micro sec)
+int MicroMouseDriver::calculateSleepTime(int distance, int stepNum)
 {
-    // モーターに指令
-    auto output = m_pMotor->setMotorparam(motorParam.lVal, motorParam.rVal, motorParam.time);
-    // 壁との距離を計測
-    auto wall = m_pWallDetector->chkWall();
-    output.wallDistance[0] = wall.data[0];
-    output.wallDistance[1] = wall.data[1];
-    output.wallDistance[2] = wall.data[2];
-    return output;
+	int sleepTime = 0;
+	//式：STEP_ANG*ステップ数/360*直径*π*秒=進む距離
+	if (stepNum < 0)
+	{
+		stepNum = stepNum*-1;
+	}
+
+	//1秒あたりの回転角度
+	double rotationAng = STEP_ANG * stepNum;
+	cout << "rotationAng" << rotationAng << endl;
+	//1秒あたりの回転数
+	double rotatioNum = rotationAng / DEGREE;
+	cout << "rotatioNum" << rotatioNum << endl;
+	//車輪の周
+	double wheelCircumference = WHEEL_RADIUS * PI;
+	cout << "wheelCircumference" << wheelCircumference << endl;
+	//スリープさせる時間
+	sleepTime = (1000000 * distance) / rotatioNum / wheelCircumference;
+	cout << "sleepTime" << wheelCircumference << endl;
+
+	return sleepTime;
 }
 
-//ロボットを指定ブロック数直進させる関数
- void MicroMouseDriver::driveNBlock(int N)
+
+//ロボットを旋回させるときのスリープ時間を計算
+//double turnDegree = 旋回させる角度
+//double stepNum = ステップ数
+//return スリープさせる時間(micro sec)
+int MicroMouseDriver::calculateTurnSleepTime(int turnDegree, int stepNum)
 {
-	Motor motor;
+	int sleepTime = 0;
+	//式：STEP_ANG*ステップ数/360*直径*π*秒=進む距離()
+	if (stepNum < 0)
+	{
+		stepNum = stepNum*-1;
+	}
+	//1秒あたりの回転角度
+	double rotationAng = STEP_ANG * stepNum;
+	//1秒あたりの回転数
+	double rotatioNum = rotationAng / DEGREE;
+	//車輪の周
+	double wheelCircumference = WHEEL_RADIUS * PI;
+	//車軸の周
+	double wheelAxleCircumference = WHEEL_AXLE * PI;
+	//車輪の回転する距離
+	double turnDistance = wheelAxleCircumference * turnDegree / DEGREE;
+	//スリープさせる時間
+	sleepTime = (turnDistance * 1000000) / rotatioNum / wheelCircumference;
 
-	motor.ctr_motor_hz(STEP_MIDDLE, STEP_MIDDLE);
+	return sleepTime;
+}
 
-	_sleep(calculateSleepTime(STEP_MIDDLE));
 
+//ロボットを停止させる関数
+void MicroMouseDriver::stop()
+{
+	motor.ctrMotorStop();
+}
+
+
+//ロボットを指定ブロック数直進させる関数
+void MicroMouseDriver::driveNBlock(int N)
+{
+	int sleepTime = (int)calculateSleepTime(BLOCK, STEP_MIDDLE)*N;
+	motor.ctrMotorHz(STEP_MIDDLE, STEP_MIDDLE);
+	usleep(sleepTime);
 	stop();
 }
 
 
- //ロボットを指定ブロック数後退させる関数
- void MicroMouseDriver::riverseNBlock(int N)
- {
-	 Motor motor;
+//ロボットを指定ブロック数後退させる関数
+void MicroMouseDriver::riverseNBlock(int N)
+{
+	int sleepTime = (int)calculateSleepTime(BLOCK, STEP_MIDDLE)*N;
+	motor.ctrMotorHz(-STEP_MIDDLE, -STEP_MIDDLE);
+	usleep(sleepTime);
+	stop();
+}
 
-	 motor.ctr_motor_hz(-STEP_MIDDLE, -STEP_MIDDLE);
+//ロボットを指定距離進ませる関数
+void MicroMouseDriver::driveMM(int distance)
+{
+	//距離が0の場合は停止して終わり
+	if (distance == 0)
+	{
+		stop();
+		return;
+	}
 
-	 _sleep(calculateSleepTime(STEP_MIDDLE));
+	int sleepTime = (int)calculateSleepTime(distance, STEP_MIDDLE);
 
-	 stop();
- }
+	if (distance > 0)　motor.ctr_motor_hz(STEP_MIDDLE, STEP_MIDDLE);
+	else             　motor.ctr_motor_hz(-STEP_MIDDLE, -STEP_MIDDLE);
 
+	_sleep(sleepTime);
 
- //ロボットを停止させる関数
- void MicroMouseDriver::stop()
- {
-	 Motor motor;
-	 motor.ctr_motor_stop();
+	stop();
+}
 
- }
-
-
-
- //ロボットを左旋回させる関数
- void MicroMouseDriver::turnLeft()
- {
-	 Motor motor;
-	 motor.ctr_motor_hz(-STEP_MIDDLE, STEP_MIDDLE);
-	 calculateTurnSleepTime(45, STEP_MIDDLE);
-	 motor.ctr_motor_stop();
- }
-
-
- //ロボットを右旋回させる関数
- void MicroMouseDriver::turnRight()
- {
-
-	 Motor motor;
-	 motor.ctr_motor_hz(STEP_MIDDLE, -STEP_MIDDLE);
-	 calculateTurnSleepTime(45, STEP_MIDDLE);
-	 motor.ctr_motor_stop();
- }
-
- //ロボットを直進させるときのスリープ時間を計算
- //double stepNum = ステップ数
- //return スリープさせる時間
- double MicroMouseDriver::calculateSleepTime(double stepNum)
- {
-	 //式：STEP_ANG*ステップ数/360*直径*π*秒=進む距離
-
-	 if (stepNum < 0) stepNum = stepNum*-1;
-
-	 //1秒あたりの回転角度
-	 double rotationAng = STEP_ANG * stepNum;
-	 //1秒あたりの回転数
-	 double rotatioNum = rotationAng / DEGREE;
-	 //車輪の周
-	 double wheelCircumference = WHEEL_RADIUS * PI;
-
-	 return BLOCK / rotatioNum / wheelCircumference;
-
- }
+//ロボットを左旋回させる関数
+void MicroMouseDriver::spinLeft()
+{
+	int sleepTime = (int)calculateTurnSleepTime(80, STEP_MIDDLE);
+	motor.ctrMotorHz(-STEP_MIDDLE, STEP_MIDDLE);
+	usleep(sleepTime);
+	stop();
+}
 
 
- //ロボットを旋回させるときのスリープ時間を計算
- //double turnDegree = 旋回させる角度
- //double stepNum = ステップ数
- //return スリープさせる時間
- double MicroMouseDriver::calculateTurnSleepTime(double turnDegree, double stepNum)
- {
+//ロボットを右旋回させる関数
+void MicroMouseDriver::spinRight()
+{
+	int sleepTime = (int)calculateTurnSleepTime(80, STEP_MIDDLE);
+	motor.ctrMotorHz(STEP_MIDDLE, -STEP_MIDDLE);
+	usleep(sleepTime);
+	stop();
+}
 
-	 if (stepNum < 0) stepNum = stepNum*-1;
 
-	 //1秒あたりの回転角度
-	 double rotationAng = STEP_ANG * stepNum;
+//ロボットを180度転回させる関数
+void MicroMouseDriver::inverse()
+{
+	int sleepTime = (int)calculateTurnSleepTime(175, STEP_MIDDLE);
+	motor.ctrMotorHz(STEP_MIDDLE, -STEP_MIDDLE);
+	usleep(sleepTime);
+	stop();
+}
 
-	 //1秒あたりの回転数
-	 double rotatioNum = rotationAng / DEGREE;
 
-	 //車輪の周
-	 double wheelCircumference = WHEEL_RADIUS * PI;
+//ロボットを指定確度旋回させる関数
+void MicroMouseDriver::turnNAngle(int angle)
+{
 
-	 //車軸の周
-	 double wheelAxleCircumference = WHEEL_AXLE * PI;
+	int sleepTime = (int)calculateTurnSleepTime(angle, STEP_MIDDLE);
+	motor.ctr_motor_hz(STEP_MIDDLE, -STEP_MIDDLE);
 
-	 //車輪の回転する距離
-	 double turnDistance = wheelAxleCircumference * turnDegree / DEGREE;
+	_sleep(sleepTime);
 
-	 return turnDistance / rotatioNum / wheelCircumference;
- }
+	motor.ctr_motor_stop();
+}
+
+//ロボットを左に1マス進めさせる関数
+void MicroMouseDriver::turnLeft()
+{
+	spinLeft();
+	driveNBlock(1);
+}
+
+
+//ロボットを右に1マス進めさせる関数
+void MicroMouseDriver::turnRight()
+{
+	spinRight();
+	driveNBlock(1);
+}

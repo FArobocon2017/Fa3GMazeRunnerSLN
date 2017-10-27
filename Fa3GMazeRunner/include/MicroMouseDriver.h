@@ -1,41 +1,35 @@
 #pragma once
-#include <memory>
-#include "MazeData.h"
-#include "MazeData.h"
 
-class WallDetector;
-class Motor;
+#include "Motor.h"
 
+#define	STEP_ANG				0.9		//モータが1ステップ辺りに回転する角度
+#define	STEP_SLOW				500		//1秒あたりにモーターに与えるステップ数
+#define	STEP_MIDDLE				400		//1秒あたりにモーターに与えるステップ数
+#define	STEP_FAST				1500		//1秒あたりにモーターに与えるステップ数
+#define	PI					    3.14159	//π
+#define	WHEEL_RADIUS				47		//車輪の直径(mm)
+#define	DEGREE					360		//360°
+#define	BLOCK					180		//1ブロックの大きさ(mm)
+#define	WHEEL_AXLE				95		//車軸の長さ(mm)
 
 class MicroMouseDriver
-{   
-	 #define	STEP_ANG				0.9		    //モータが1ステップ辺りに回転する角度
-	 #define	STEP_SLOW				500			//1秒あたりにモーターに与えるステップ数
-	 #define	STEP_MIDDLE				1000		//1秒あたりにモーターに与えるステップ数
-	 #define	STEP_FAST				1500		//1秒あたりにモーターに与えるステップ数
-	 #define	PI						3.14159		//π
-	 #define	WHEEL_RADIUS			47		    //車輪の直径(mm)
-	 #define	DEGREE					360		    //360°
-	 #define	BLOCK					180		    //1ブロックの大きさ(mm)
-	 #define	WHEEL_AXLE				95		    //車軸の長さ(mm)
-
-
-
-
-     std::unique_ptr<WallDetector> m_pWallDetector;
-     std::unique_ptr<Motor> m_pMotor;
-	 double MicroMouseDriver::calculateSleepTime(double stepNum);
-	 double MicroMouseDriver::calculateTurnSleepTime(double turnDegree, double stepNum);
+{
+	Motor motor;
+	int calculateSleepTime(int distance, int stepNum);
+	int calculateTurnSleepTime(int turnDegree, int stepNum);
 
 public:
-    MicroMouseDriver();
-    ~MicroMouseDriver();
-    MotorOutputParam drive(const MotorInputParam& motorParam);
+	MicroMouseDriver() {};
+	~MicroMouseDriver() {};
 
-
-	void MicroMouseDriver::driveNBlock(int N);
-	void MicroMouseDriver::riverseNBlock(int N);
-	void MicroMouseDriver::stop();
-	void MicroMouseDriver::turnLeft();
-	void MicroMouseDriver::turnRight();
+	void stop();
+	void driveNBlock(int N);
+	void riverseNBlock(int N);
+	void driveMM(int distance);
+	void spinLeft();
+	void spinRight();
+	void inverse();
+	void turnNAngle(int angle);
+	void turnLeft();
+	void turnRight();
 };
